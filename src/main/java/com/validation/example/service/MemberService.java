@@ -2,6 +2,7 @@ package com.validation.example.service;
 
 import com.validation.example.domain.request.MemberRequestDto;
 import com.validation.example.domain.response.MemberResponseDto;
+import com.validation.example.exception.ValidCustomException;
 import com.validation.example.repository.MemberRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class MemberService {
 
   @Transactional
   public Long save(MemberRequestDto memberRequestDto) {
+    verifyDuplicateEmail(memberRequestDto.getEmail());
     return memberRepository.save(memberRequestDto.toEntity()).getId();
   }
 
@@ -29,6 +31,12 @@ public class MemberService {
             .stream()
             .map(MemberResponseDto::new)
             .collect(Collectors.toList());
+  }
+
+  private void verifyDuplicateEmail(String email) {
+    if (memberRepository.findByEmail(email).isPresent()) {
+      throw new ValidCustomException("이미 사용중인 이메일 주소입니다.", "email");
+    }
   }
 
 }
